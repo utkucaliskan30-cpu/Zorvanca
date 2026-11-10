@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zorvanca Çeviri</title>
+<style>
+:root{--blue:#315efb;--ink:#202536;--muted:#687086;--line:#e4e8f0;--panel:#fff;--bg:#f4f6fb}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Arial,Helvetica,sans-serif}
+header{background:#fff;border-bottom:1px solid var(--line);padding:22px 18px}
+.header-inner{max-width:1050px;margin:auto;display:flex;align-items:center;gap:12px}
+.logo{width:42px;height:42px;border-radius:13px;background:var(--blue);color:white;display:grid;place-items:center;font-size:22px;font-weight:700}
+h1{font-size:23px;margin:0 0 4px}
+.subtitle{margin:0;color:var(--muted);font-size:13px}
+main{max-width:1050px;margin:30px auto;padding:0 18px}
+.translator{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.direction-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 14px;padding:12px 14px;background:#fff;border:1px solid var(--line);border-radius:12px;font-weight:700}
+.direction-bar span{font-size:14px}
+@media(max-width:420px){.direction-bar{align-items:stretch;flex-direction:column}.direction-bar button{width:100%}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:0 5px 20px #1b2a4a0a}
+.panel-head{padding:15px 18px;border-bottom:1px solid var(--line);font-weight:700;display:flex;justify-content:space-between;align-items:center}
+.lang{color:var(--blue)}
+textarea{width:100%;height:220px;resize:vertical;border:0;outline:0;padding:18px;font:16px/1.6 Arial;color:var(--ink);background:#fff}
+.output{min-height:220px;padding:18px;font-size:16px;line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere}
+.placeholder{color:#9299aa}
+.actions{display:flex;gap:9px;padding:0 18px 16px;flex-wrap:wrap}
+button{border:0;border-radius:10px;padding:10px 15px;font-weight:700;cursor:pointer}
+.primary{background:var(--blue);color:#fff}
+.secondary{background:#eef1f8;color:#30384d}
+.status{padding:0 18px 15px;color:var(--muted);font-size:12px;min-height:30px}
+.section{margin-top:24px}
+details.dictionary{background:#fff;border:1px solid var(--line);border-radius:15px;overflow:hidden;box-shadow:0 5px 20px #1b2a4a08}
+details.dictionary summary{list-style:none;cursor:pointer;padding:17px 19px;font-weight:700;display:flex;align-items:center;justify-content:space-between}
+details.dictionary summary::-webkit-details-marker{display:none}
+details.dictionary summary:after{content:"＋";font-size:21px;color:var(--blue)}
+details.dictionary[open] summary:after{content:"−"}
+.dict-content{border-top:1px solid var(--line);padding:16px 18px 20px}
+.dict-tools{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:13px}
+.dict-tools input{flex:1;min-width:190px;border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-size:14px;outline-color:var(--blue)}
+.count{font-size:12px;color:var(--muted)}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid #edf0f5;font-size:14px}
+th{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+tr:last-child td{border-bottom:0}
+.note{color:var(--muted);font-size:12px;line-height:1.5;margin:14px 2px 0}
+footer{text-align:center;color:#9299aa;font-size:12px;padding:30px 15px}
+@media(max-width:700px){.translator{grid-template-columns:1fr}textarea{height:170px}.output{min-height:170px}main{margin-top:20px}}
+</style>
+</head>
+<body>
+<header><div class="header-inner"><div class="logo">Z</div><div><h1>Zorvanca Çeviri</h1><p class="subtitle">Türkçeden Zorvancaya ilk sözlük sürümü</p></div></div></header>
+<main>
+  <div class="direction-bar">
+    <span id="directionLabel">Türkçe → Zorvanca</span>
+    <button class="secondary" id="swapDirection" type="button" aria-label="Çeviri yönünü değiştir">↔ Yönü değiştir</button>
+  </div>
+  <div class="translator">
+    <section class="panel">
+      <div class="panel-head"><span>Türkçe</span><span class="lang">Giriş</span></div>
+      <textarea id="source" placeholder="Türkçe kelime veya cümle yaz..."></textarea>
+      <div class="actions"><button class="primary" id="translate">Zorvancaya çevir</button><button class="secondary" id="clear">Temizle</button></div>
+      <div class="status" id="sourceStatus">Çevirmek istediğin metni buraya yaz.</div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><span>Zorvanca</span><span class="lang">Çeviri</span></div>
+      <div class="output placeholder" id="result">Çeviri burada görünecek...</div>
+      <div class="actions"><button class="secondary" id="copy">Çeviriyi kopyala</button></div>
+      <div class="status" id="resultStatus">Sözlükte bulunmayan kelimeler ⟦bu şekilde⟧ gösterilir.</div>
+    </section>
+  </div>
+
+  <section class="section">
+    <details class="dictionary">
+      <summary><span>Başlangıç sözlüğü</span><span class="count" id="summaryCount">— kelime</span></summary>
+      <div class="dict-content">
+        <div class="dict-tools">
+          <input id="search" type="search" placeholder="Sözlükte kelime ara...">
+          <span class="count" id="dictCount"></span>
+        </div>
+        <table><thead><tr><th>Türkçe</th><th>Zorvanca</th></tr></thead><tbody id="dictionaryRows"></tbody></table>
+        <p class="note">Bu sürüm kelimeleri sözlükteki karşılıklarıyla değiştirir. Türkçenin eklerini ve cümle dilbilgisini henüz çözümlemez. Yeni kelimeler eklendikçe sözlük genişleyecek.</p>
+      </div>
+    </details>
+  </section>
+</main>
+<footer>Zorvanca • Geliştirme sürümü</footer>
+<script>
+const dictionary = {
+"merhaba":"Veyra","hayır":"Noku","evet":"Evara","arkadaş":"Şavik","ev":"Lomera",
+"para":"Teyron","güzel":"Mavuş","zor":"Zorken","çok zor":"Zorken","şaşırtıcı":"Avira",
+"olması imkânsız":"Panamastik","olması imkansız":"Panamastik","ben":"Aven","sen":"Saren",
+"o":"Oren","biz":"Avera","siz":"Sarva","onlar":"Orven","güneş":"Solkar","ay":"Nuvra",
+"yıldız":"Eltin","gökyüzü":"Varun","toprak":"Dargel","ağaç":"Morku","deniz":"Şorva",
+"ateş":"Keldra","hava":"Aşen","taş":"Grunak","kapı":"Dorva","pencere":"Velki",
+"kitap":"Neral","kalem":"Tiskar","masa":"Ortek","sandalye":"Vemra","okul":"Selkun",
+"iş":"Bravik","öğretmen":"Elvran","öğrenci":"Nerin","konuşmak":"Savren","yazmak":"Teral",
+"okumak":"Velsar","görmek":"Aşvar","bilmek":"Kenvor","gitmek":"Delvar","gelmek":"Narev",
+"sevmek":"Sovira","yemek":"Kelmor","su":"Tavren","gece":"Yalvek","gündüz":"Ormira",
+"bilgisayar":"Vasken","oyun":"Ruvak","mutlu":"Melvar","üzgün":"Dorev","hızlı":"Şelka",
+"yavaş":"Vornak","büyük":"Elnor","küçük":"Pirev","teşekkürler":"Zeymar",
+"günaydın":"Arelva","iyi":"Mirel","kötü":"Dasken","lütfen":"Vesari","özür":"Nedvar",
+"özür dilerim":"Nedvara","hoşça kal":"Veyrano","görüşürüz":"Sarevon","aile":"Talmera",
+"anne":"Nuvema","baba":"Korven","kardeş":"Şavren","çocuk":"Pavik","insan":"Orlena",
+"kadın":"Velora","erkek":"Darev","dost":"Şavik","şehir":"Kormira","ülke":"Valdora",
+"yol":"Tervan","araba":"Rasken","bisiklet":"Bireva","telefon":"Telfar","ekran":"Monira",
+"klavye":"Klavren","fare":"Mavik","internet":"Netora","teknoloji":"Tekvar","zaman":"Evrin",
+"saat":"Tavora","bugün":"Deyran","yarın":"Yavren","dün":"Duvran","sabah":"Arel",
+"akşam":"Veskar","öğle":"Orvay","hafta":"Selvar","yıl":"Yorin","dakika":"Minora",
+"bir":"Unar","iki":"Dovar","üç":"Teren","dört":"Kavar","beş":"Pelin","altı":"Sovar",
+"yedi":"Nerin","sekiz":"Veylan","dokuz":"Deren","on":"Orkan","kırmızı":"Ruvin",
+"mavi":"Lazur","yeşil":"Velin","sarı":"Solven","siyah":"Nokar","beyaz":"Averaç",
+"renk":"Kolven","ses":"Savik","müzik":"Melora","şarkı":"Tavira","film":"Kelmira",
+"spor":"Varkan","futbol":"Futren","top":"Boran","takım":"Tavren","gol":"Golvar",
+"kazanan":"Veydar","kaybetmek":"Nokven","başlamak":"Aşren","bitirmek":"Dovren",
+"çalışmak":"Bravira","öğrenmek":"Nerava","anlamak":"Kenvira","istemek":"Vesken",
+"yapmak":"Tavreni","almak":"Darema","vermek":"Velkan","açmak":"Orveta","kapatmak":"Noketa",
+"beklemek":"Seldar","yardım":"Mavren","soru":"Kervan","cevap":"Tavlen","doğru":"Evrak",
+"yanlış":"Daskora","şimdi":"Neyra","sonra":"Veyran","önce":"Deyva","burada":"Orvema",
+"orada":"Sarvema","nerede":"Kerveta","neden":"Dorema","nasıl":"Veskan","ne":"Kena",
+"kim":"Kira","ve":"Na","ama":"Dara","ile":"Ena","için":"Vora","var":"Arelon",
+"yok":"Nokel","benim":"Avenar","senin":"Sarenar","bizim":"Averan","çok":"Mavren",
+"az":"Pirel","her":"Orvenar","bazı":"Selken","yeni":"Nevora","eski":"Dovira",
+"uzun":"Tervora","kısa":"Pireva","sıcak":"Keldan","soğuk":"Nuvak","ıslak":"Tavrik",
+"kuru":"Dargen","temiz":"Veloraç","kirli":"Nokvara","güçlü":"Bravon","zayıf":"Pirevon",
+"akıllı":"Kenvora","komik":"Melvik","sessiz":"Nok sav".replace(" ",""),"gürültü":"Savdora",
+"kaplumbağa":"Tormik","kedi":"Mişora","köpek":"Dovak","kuş":"Veylin","balık":"Şorik",
+"çiçek":"Florin","orman":"Morkara","dağ":"Gravon","nehir":"Tavoraç","göl":"Nuvran",
+"bulut":"Varika","yağmur":"Tavşen","kar":"Nuvşar","rüzgâr":"Aşvarin","fırtına":"Dargora",
+"ekmek":"Kelmara","elma":"Pavora","yemek":"Kelmor","kahve":"Koriva","çay":"Şelora",
+"peynir":"Velşik","süt":"Nuvem","meyve":"Pavren","sebze":"Dargelı","sağlık":"Mireva",
+"mutluluk":"Melvara","üzüntü":"Doreva","korku":"Nokşar","heyecan":"Avirel","hayal":"Yalora",
+"fikir":"Kenvorik","hayat":"Orlena","dünya":"Valmera","evren":"Varunor","ışık":"Solira",
+"karanlık":"Nokira","gölge":"Dovşen","güç":"Bravara","özgürlük":"Velvara","barış":"Mirelan",
+"başarı":"Veykara","gelecek":"Narevon","geçmiş":"Dovranor","baş":"Kavren","el":"Velik",
+"göz":"Aşenor","kulak":"Savrenor","kalp":"Melkor","ayak":"Darelin","yüz":"Orvenik",
+"merdiven":"Kavlora","oda":"Lomarin","mutfak":"Kelvora","banyo":"Nuvdora","yatak":"Mirevan",
+"kapı kolu":"Dorvik","anahtar":"Kervora","çanta":"Tavmira","ayakkabı":"Darevon","giysi":"Velmora",
+"gömlek":"Velşar","pantolon":"Dareşen","mont":"Keldvra","şapka":"Kavşen","gözlük":"Aşmira",
+"market":"Valtek","dükkan":"Tavşar","usta":"Korvenik","müşteri":"Orlaven","bilgi":"Kenvoraç",
+"haber":"Savmira","mesaj":"Telfora","fotoğraf":"Monivar","video":"Vaskora","şifre":"Nokmira",
+"dosya":"Nerovar","klasör":"Selmora","program":"Teklora","uygulama":"Tekvara","şarj":"Keldven",
+"pil":"Keldin","ekmekçi":"Kelmarik","kahvaltı":"Arelmira","öğle yemeği":"Orvaykel","akşam yemeği":"Veskarkel",
+"aç":"Kelvren","tok":"Mirekel","susamak":"Tavşenik","acıkmak":"Kelşen","dinlenmek":"Mireşar",
+"tatil":"Yalmera","izin":"Veylena","yardımcı":"Mavorik","komşu":"Lomaven","misafir":"Talvren",
+"hediye":"Veymira","doğum günü":"Arelvay","kutlama":"Melvaya","şans":"Avrikan","şaka":"Melşora",
+"doğum":"Arelven","isim":"Kenviraç","soyadı":"Orvenarç","sınıf":"Selkora","ders":"Neravaç",
+"ödev":"Teralik","sınav":"Kervanik","teneffüs":"Yalveta","öğrenci çantası":"Nerotav",
+"pazar":"Valdaren","pazartesi":"Deysel","salı":"Dovsel","çarşamba":"Tersel","perşembe":"Kavsel",
+"cuma":"Pelsel","cumartesi":"Sovsel","pazar günü":"Nersel","ilk":"Arelik","son":"Dovelik",
+"orta":"Ormeta","aynı":"Nokfara","farklı":"Veyfara","belki":"Avrora","kesin":"Evrakaç",
+"gerçek":"Evrinor","yalan":"Daskenor","hazır":"Mirevar","meşgul":"Bravora","boş":"Nokmaren",
+"dolu":"Tavmaren","yakın":"Orviken","uzak":"Sarviken","sağ":"Veydora","sol":"Nokdora",
+"ileri":"Aşvera","geri":"Dovvera","üst":"Kavora","alt":"Dargoraç","yan":"Enaşor",
+"başka":"Nevoran","birlikte":"Averena","yalnız":"Avenor","hemen":"Neyrava","yavaşça":"Vornaka"
+};
+
+const source = document.getElementById('source');
+const result = document.getElementById('result');
+const sourceStatus = document.getElementById('sourceStatus');
+const resultStatus = document.getElementById('resultStatus');
+const sourceTitle = document.querySelector('.translator .panel:first-child .panel-head span:first-child');
+const targetTitle = document.querySelector('.translator .panel:last-child .panel-head span:first-child');
+const directionLabel = document.getElementById('directionLabel');
+let reverseDirection = false;
+
+function getReverseDictionary(){
+  const reverse = Object.create(null);
+  for(const [tr,zv] of Object.entries(dictionary)){
+    const key = zv.toLocaleLowerCase('tr-TR');
+    if(!reverse[key]) reverse[key] = [];
+    if(!reverse[key].includes(tr)) reverse[key].push(tr);
+  }
+  return reverse;
+}
+function activeDictionary(){ return reverseDirection ? getReverseDictionary() : dictionary; }
+function translateText(){
+  const raw = source.value;
+  if(!raw.trim()){
+    result.textContent = 'Çeviri burada görünecek...';
+    result.classList.add('placeholder');
+    sourceStatus.textContent = 'Önce çevirmek istediğin metni yaz.';
+    resultStatus.textContent = 'Sözlükte bulunmayan kelimeler ⟦bu şekilde⟧ gösterilir.';
+    return;
+  }
+  const dict = activeDictionary();
+  const keys = Object.keys(dict).sort((a,b)=>b.length-a.length);
+  const escaped = keys.map(k=>k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'));
+  const pattern = new RegExp("(?<![\\p{L}\\p{N}])(?:" + escaped.join("|") + ")(?![\\p{L}\\p{N}])|[\\p{L}]+(?:[’\'][\\p{L}]+)*", "giu");
+  const unknown = new Set();
+  const translated = raw.replace(pattern, token=>{
+    const key = token.toLocaleLowerCase('tr-TR');
+    if(Object.prototype.hasOwnProperty.call(dict,key)){
+      const value = dict[key];
+      const rendered = Array.isArray(value) ? value.join(' / ') : value;
+      return token[0] === token[0].toLocaleUpperCase('tr-TR')
+        ? rendered.charAt(0).toLocaleUpperCase('tr-TR') + rendered.slice(1) : rendered;
+    }
+    unknown.add(token);
+    return '⟦' + token + '⟧';
+  });
+  result.textContent = translated;
+  result.classList.remove('placeholder');
+  sourceStatus.textContent = 'Metin işlendi.';
+  resultStatus.textContent = unknown.size
+    ? unknown.size + ' kelime sözlükte bulunamadı; ⟦işaretli⟧ gösterildi.'
+    : 'Sözlükteki karşılıklar kullanıldı.';
+}
+function updateDirection(){
+  const from = reverseDirection ? 'Zorvanca' : 'Türkçe';
+  const to = reverseDirection ? 'Türkçe' : 'Zorvanca';
+  sourceTitle.textContent = from;
+  targetTitle.textContent = to;
+  directionLabel.textContent = from + ' → ' + to;
+  source.placeholder = from + ' kelime veya cümle yaz...';
+  document.getElementById('translate').textContent = to + ' diline çevir';
+  document.getElementById('summaryCount').textContent = Object.keys(dictionary).length + ' kelime';
+  renderDictionary(document.getElementById('search').value);
+  source.value = '';
+  result.textContent = 'Çeviri burada görünecek...';
+  result.classList.add('placeholder');
+  sourceStatus.textContent = 'Çevirmek istediğin metni buraya yaz.';
+  resultStatus.textContent = 'Sözlükte bulunmayan kelimeler ⟦bu şekilde⟧ gösterilir.';
+}
+document.getElementById('swapDirection').addEventListener('click',()=>{
+  reverseDirection = !reverseDirection;
+  updateDirection();
+});
+document.getElementById('translate').addEventListener('click',translateText);
+document.getElementById('clear').addEventListener('click',()=>{
+  source.value=''; result.textContent='Çeviri burada görünecek...'; result.classList.add('placeholder');
+  sourceStatus.textContent='Çevirmek istediğin metni buraya yaz.';
+  resultStatus.textContent='Sözlükte bulunmayan kelimeler ⟦bu şekilde⟧ gösterilir.';
+});
+document.getElementById('copy').addEventListener('click',async()=>{
+  const text=result.textContent;
+  if(!text || result.classList.contains('placeholder')) return;
+  try{await navigator.clipboard.writeText(text);resultStatus.textContent='Çeviri panoya kopyalandı.';}
+  catch(e){resultStatus.textContent='Kopyalama desteklenmedi. Metni seçip kopyalayabilirsin.';}
+});
+function renderDictionary(filter=''){
+  const rows=document.getElementById('dictionaryRows');
+  rows.innerHTML='';
+  const entries = reverseDirection
+    ? Object.entries(getReverseDictionary()).map(([zor,trList])=>[zor,trList.join(' / ')])
+    : Object.entries(dictionary);
+  const filtered=entries.filter(([left,right])=>(left+' '+right).toLocaleLowerCase('tr-TR').includes(filter.toLocaleLowerCase('tr-TR')))
+    .sort((a,b)=>a[0].localeCompare(b[0],'tr'));
+  document.querySelector('thead th:first-child').textContent = reverseDirection ? 'Zorvanca' : 'Türkçe';
+  document.querySelector('thead th:last-child').textContent = reverseDirection ? 'Türkçe' : 'Zorvanca';
+  for(const [left,right] of filtered){
+    const row=document.createElement('tr');
+    const a=document.createElement('td'),b=document.createElement('td');
+    a.textContent=left;b.textContent=right;row.append(a,b);rows.append(row);
+  }
+  document.getElementById('dictCount').textContent=filtered.length+' / '+entries.length+' kayıt gösteriliyor';
+}
+document.getElementById('search').addEventListener('input',e=>renderDictionary(e.target.value));
+document.getElementById('summaryCount').textContent=Object.keys(dictionary).length+' kelime';
+renderDictionary();
+updateDirection();
+</script>
+</body>
+</html>
